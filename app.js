@@ -9,7 +9,14 @@ require('dotenv').config()
 const {connecttoMongoDB} = require("./config/db")
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var usersRouter = require('./routes/userRouter');
+var osRouter = require('./routes/osRouter');
+var matchRouter = require('./routes/matchRouter');
+var messageRouter = require('./routes/messageRouter');
+var teamRouter = require('./routes/teamRouter'); 
+var ratingRouter = require('./routes/ratingRouter');
+var notificationRouter = require('./routes/notificationRouter'); 
+
 
 var app = express();
 
@@ -21,6 +28,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/os', osRouter);
+app.use('/matches', matchRouter);
+app.use('/messages', messageRouter); 
+app.use('/teams', teamRouter);
+app.use('/ratings', ratingRouter);
+app.use('/notifications', notificationRouter);
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -35,7 +51,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.json('error');
 });
 
 const server = http.createServer(app)
