@@ -17,7 +17,7 @@ module.exports.getAllMessages = async (req, res) => {
     const messages = await Message.find()
       .populate("senderId", "username email")
       .populate("matchId", "title date");
-    res.status(200).json(messages);
+    res.status(200).json({messagesList:messages});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -61,3 +61,26 @@ module.exports.deleteMessage = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Récupérer tous les messages d’un match
+module.exports.getMessagesByMatch = async (req, res) => {
+  try {
+    const messages = await Message.find(req.params.id).populate("sender", "username email");
+    if (!messages) return res.status(404).json({ message: "Message not found" });
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Récupérer tous les messages d’un utilisateur
+module.exports.getMessagesByUser = async (req, res) => {
+  try {
+    const messages = await Message.find(req.params.id).populate("match", "title date location");
+    if (!messages) return res.status(404).json({ message: "Message not found" });
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
