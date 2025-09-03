@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const matchSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   location: { type: String, required: true },
   latitude: Number,
   longitude: Number,
