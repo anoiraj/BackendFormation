@@ -15,7 +15,7 @@ module.exports.createNotification = async (req, res) => {
 module.exports.getAllNotifications = async (req, res) => {
   try {
     const notifs = await Notification.find().populate("userId", "username email");
-    res.status(200).json(notifs);
+    res.status(200).json({notifsList:notifs});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -64,6 +64,44 @@ module.exports.deleteNotification = async (req, res) => {
     const deleted = await Notification.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: "Notification not found" });
     res.status(200).json({ message: "Notification deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Récupérer toutes les notifications d’un utilisateur
+module.exports.getNotificationsByUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const notifications = await Notification.find({ user: userId });
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Marquer une notification comme lue
+module.exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+    const updated = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Notification introuvable" });
+    res.status(200).json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Marquer toutes les notifications comme lues
+module.exports.markAllAsRead = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    await Notification.updateMany({ user: userId }, { isRead: true });
+    res.status(200).json({ message: "Toutes les notifications marquées comme lues" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
