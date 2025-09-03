@@ -17,18 +17,18 @@ const userSchema = new mongoose.Schema({
   location: { type: String },
   isDeleted: { type: Boolean, default: false },
   isBloked: { type: Boolean, default: false },
-  
+
+  //relations :
   //match: { type: mongoose.Schema.Types.ObjectId, ref: 'Match' }, //One
-  matchs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Match' }], //Many
+  matches: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Match' }], //Many
   notifications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }],
   teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
   messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
-  ratings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rating' }],
-  
+  receivesRatings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rating' }],
+  givesRatings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rating' }],
 
 
 
-  //nzid clés etrangeres***
 }
   , { timestamps: true });
 
@@ -44,5 +44,33 @@ userSchema.pre("save", async function (next) {
   }
 });
 
+userSchema.statics.login = async function (email, password) {
+  try {
+    const user = await this.findOne({ email })
+
+
+    if (user) {
+      const auth = await bcrypt.compare(password, user.password)
+      if (auth) {
+
+        /*if (user.etat == false) {
+          throw new Error("compte deactivé");      'pour verification'
+        }
+         if (user.ban == false) {
+          throw new Error("compte banned");
+        }*/
+
+        return user
+      }
+      throw new Error("incorrect password");
+    }
+    throw new Error("incorrect email");
+    
+  } catch (error) {
+    throw new Error("probleme login");
+  }
+}
+
 const User = mongoose.model('User', userSchema);
-module.exports = User 
+module.exports = User
+

@@ -12,9 +12,10 @@ module.exports.esmFocntion = async (req, res) => {
 module.exports.getAllUsers = async (req, res) => {
   try {
     //logique
+    const user = req.user   //ywali yaaref user courant manghir mano93ed na3ti fih fel id mte3o
     const UserList = await userModel.find()
 
-    res.status(200).json({UserList});
+    res.status(200).json({userCourant : user ,UserList:UserList}); 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -28,6 +29,10 @@ module.exports.getUserById = async (req, res) => {
     //const id = req.query
     const User = await userModel.findById(id)
 
+    if (!User) {
+      throw new Error("user n'existe pas");
+    }
+    
     res.status(200).json({User});
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -40,7 +45,7 @@ module.exports.addClient = async (req, res) => {
     const {username , email, password , age}=req.body
     console.log("req.body",req.body)
     const role = 'client'
-    const client = new userModel({username , email, password , age , role})
+    const client = new userModel({username , email , password , age , role})
     //const client = new userModel(req.body) tzid m3aha role
     const addedUser = await client.save()
     res.status(200).json(addedUser);
@@ -329,6 +334,88 @@ module.exports.updateRoleByAdminToMatchOrganizer = async (req, res) => {
       message: "Le rôle a été changé en matchOrganizer avec succès",
       user: updatedUser
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Bloquer un utilisateur (isBlocked = true)
+module.exports.blockUser = async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { isBloked: true },
+      { new: true }
+    );
+    if (!updatedUser) return res.status(404).json({ message: "Utilisateur introuvable" });
+    res.status(200).json({ message: "Utilisateur bloqué avec succès", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Soft delete (isDeleted = true au lieu de suppression)
+module.exports.softDeleteUser = async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
+    if (!updatedUser) return res.status(404).json({ message: "Utilisateur introuvable" });
+    res.status(200).json({ message: "Utilisateur supprimé (soft delete)", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Récupérer les utilisateurs par rôle
+module.exports.getUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.params; // ex: "client" / "admin" / "matchOrganizer"
+    const allowedRoles = ['client', 'admin', 'matchOrganizer'];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: "Rôle invalide. Valeurs possibles : client, admin, matchOrganizer" });
+    }
+
+    const users = await User.find({ role });
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const jwt = require('jsonwebtoken')
+
+const maxAge = 1 * 60 * 60//1min
+const createToken = (id) =>{
+  return jwt.sign({id},"net foot secret",{expiresIn :maxAge})
+}
+
+module.exports.login = async (req, res) => {
+  try {
+    //logique
+    const {email, password} = req.body
+    const User = await userModel.login(email, password)
+
+    const token = createToken(User._id)
+    console.log(token)
+
+    res.cookie('jwt_Token',token,{httpOnly: false,maxAge: maxAge * 1000})
+
+    res.status(200).json({message:'User successfully authentificated',user:User, token:token});
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports.logout = async (req, res) => {
+  try {
+    //logique
+
+    res.cookie('jwt_Token','',{ httpOnly: false, maxAge: 1})
+
+    res.status(200).json({ message:'User successfully logged out' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
